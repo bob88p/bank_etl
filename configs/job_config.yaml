@@ -1,0 +1,141 @@
+job:
+  name: bank_etl
+  version: "1.0"
+  description: "Banking ETL pipeline for data warehouse (customers, accounts, transactions)"
+
+# ============================================================
+# INPUT SOURCES
+# ============================================================
+
+inputs:
+  - source_name: customers
+    input_type: json
+    input_path: data/raw/
+    input_suffix: customers.json
+    has_header: false
+    input_schema:
+      CustomerID: int
+      FirstName: str
+      LastName: str
+      Phone: str
+      Email: str
+      Address: str
+      JoinDate: datetime
+
+  - source_name: accounts
+    input_type: csv
+    input_path: data/raw/
+    input_suffix: raw_accounts.csv
+    has_header: true
+    input_schema:
+      AccountID: int
+      CustomerID: int
+      AccountType: str
+      Balance: float
+      CreatedDate: datetime
+
+  - source_name: transactions
+    input_type: csv
+    input_path: data/raw/
+    input_suffix: raw_transactions.csv
+    has_header: true
+    input_schema:
+      TransactionID: int
+      AccountID: int
+      TransactionType: str
+      Amount: float
+      TransactionDate: datetime
+
+  - source_name: cards
+    input_type: csv
+    input_path: data/raw/
+    input_suffix: raw_cards.csv
+    has_header: true
+    input_schema:
+      CardID: int
+      CustomerID: int
+      CardType: str
+      CardNumber: str
+      IssuedDate: datetime
+      ExpirationDate: datetime
+
+  - source_name: loans
+    input_type: csv
+    input_path: data/raw/
+    input_suffix: raw_loans.csv
+    has_header: true
+    input_schema:
+      LoanID: int
+      CustomerID: int
+      LoanType: str
+      LoanAmount: float
+      InterestRate: float
+      LoanStartDate: datetime
+      LoanEndDate: datetime
+
+  - source_name: support_calls
+    input_type: csv
+    input_path: data/raw/
+    input_suffix: raw_support_calls.csv
+    has_header: true
+    input_schema:
+      CallID: int
+      CustomerID: int
+      CallDate: datetime
+      IssueType: str
+      Resolved: str
+
+# ============================================================
+# REJECTION POLICY
+# ============================================================
+
+rejection:
+  rejection_path: data/rejected/
+  rejection_type: csv
+  max_rejection_rate: 0.20   # stop pipeline if >20% invalid rows
+
+# ============================================================
+# OUTPUT SETTINGS
+# ============================================================
+
+output:
+  target_tables:
+    - dim_customers
+    - dim_accounts
+    - dim_cards
+    - dim_loans
+    - fact_transactions
+    - fact_support_calls
+
+  output_type: sql
+  output_path: data/processed/
+  save_mode: upsert
+  partition_cols:
+    - TransactionDate
+
+# ============================================================
+# ETL RULES (aligned with your real pipeline)
+# ============================================================
+
+etl:
+  rules:
+    - name: schema_validation
+    - name: remove_duplicates
+    - name: enforce_foreign_keys
+    - name: normalize_dates
+    - name: standardize_text_fields
+    - name: validate_financial_values
+
+# ============================================================
+# DATA QUALITY CHECKS (REALISTIC)
+# ============================================================
+
+quality:
+  checks:
+    - total_rows_extracted
+    - schema_validation_pass_rate
+    - rejection_rate
+    - foreign_key_integrity
+    - negative_amount_check
+    - duplicate_primary_keys
+    - suspicious_balance_accounts

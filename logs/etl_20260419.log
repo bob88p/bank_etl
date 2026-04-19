@@ -1,0 +1,353 @@
+2026-04-19 20:12:56 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:12:56 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:12:56 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:12:56 | ERROR    | pipeline                  | Pipeline failed: 'input'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 168, in run_pipeline
+    config = load_config(config_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\utils\config_loader.py", line 69, in load_config
+    input_cfg = raw["input"]
+                ~~~^^^^^^^^^
+KeyError: 'input'
+2026-04-19 20:14:50 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:14:50 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:14:50 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:14:50 | ERROR    | pipeline                  | Pipeline failed: 'input'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 169, in run_pipeline
+    raw_config = load_config(config_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\utils\config_loader.py", line 69, in load_config
+    input_cfg = raw["input"]
+                ~~~^^^^^^^^^
+KeyError: 'input'
+2026-04-19 20:17:27 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:17:27 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:17:27 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:17:27 | ERROR    | pipeline                  | Pipeline failed: 'JobConfig' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 175, in run_pipeline
+    config.name = raw_config.get("job", {}).get("name", "Bank ETL")
+                  ^^^^^^^^^^^^^^
+AttributeError: 'JobConfig' object has no attribute 'get'
+2026-04-19 20:21:45 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:21:45 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:21:45 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:21:45 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:21:45 | INFO     | pipeline                  | Input path : data/raw/
+2026-04-19 20:21:45 | INFO     | pipeline                  | Output path: data/processed/
+2026-04-19 20:21:45 | INFO     | pipeline                  |   STAGE 1 � EXTRACT
+2026-04-19 20:21:45 | WARNING  | pipeline                  | Extract stage is placeholder - using empty DataFrames for testing
+2026-04-19 20:21:45 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:21:45 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:21:45 | ERROR    | pipeline                  | Pipeline failed: 'JoinDate'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 205, in run_pipeline
+    cleaned, clean_rejected = clean(validated)
+                              ^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 69, in clean
+    cleaned["customers"], rejected["customers"] = clean_customers(validated["customers"])
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\transform\etl_rules.py", line 48, in clean_customers
+    if pd.api.types.is_numeric_dtype(df["JoinDate"]):
+                                     ~~^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\core\frame.py", line 4378, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\core\indexes\range.py", line 525, in get_loc
+    raise KeyError(key)
+KeyError: 'JoinDate'
+2026-04-19 20:28:04 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:04 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:28:04 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:04 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:28:04 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:28:04 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:28:04 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:28:04 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:28:04 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:04 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:04 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:28:04 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:28:04 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:28:04 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:28:04 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:28:04 | ERROR    | pipeline                  | Pipeline failed: Cannot save file into a non-existent directory: 'data\processed'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 478, in run_pipeline
+    load(transformed, all_rejected, config, connection_string)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 401, in load
+    df.to_csv(path, index=False)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\core\generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\csvs.py", line 251, in save
+    with get_handle(
+         ^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 793, in get_handle
+    check_parent_directory(str(handle))
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 652, in check_parent_directory
+    raise OSError(rf"Cannot save file into a non-existent directory: '{parent}'")
+OSError: Cannot save file into a non-existent directory: 'data\processed'
+2026-04-19 20:28:17 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:17 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:28:17 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:17 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:28:17 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:28:17 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:28:17 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:28:17 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:28:17 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:17 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:17 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:28:18 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:28:18 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:28:18 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:28:18 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:28:18 | ERROR    | pipeline                  | Pipeline failed: Cannot save file into a non-existent directory: 'data\processed'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 478, in run_pipeline
+    load(transformed, all_rejected, config, connection_string)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 401, in load
+    df.to_csv(path, index=False)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\core\generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\csvs.py", line 251, in save
+    with get_handle(
+         ^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 793, in get_handle
+    check_parent_directory(str(handle))
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 652, in check_parent_directory
+    raise OSError(rf"Cannot save file into a non-existent directory: '{parent}'")
+OSError: Cannot save file into a non-existent directory: 'data\processed'
+2026-04-19 20:28:46 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:46 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:28:46 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:28:46 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:28:46 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:28:46 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:28:46 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:28:46 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:28:46 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:46 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:28:46 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:28:46 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:28:46 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:28:46 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:28:46 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:28:46 | ERROR    | pipeline                  | Pipeline failed: Cannot save file into a non-existent directory: 'data\processed'
+Traceback (most recent call last):
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 478, in run_pipeline
+    load(transformed, all_rejected, config, connection_string)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\src\pipeline.py", line 401, in load
+    df.to_csv(path, index=False)
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\core\generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\formats\csvs.py", line 251, in save
+    with get_handle(
+         ^^^^^^^^^^^
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 793, in get_handle
+    check_parent_directory(str(handle))
+  File "C:\Users\NEW TECH\Desktop\bank\bank_etl\.venv\Lib\site-packages\pandas\io\common.py", line 652, in check_parent_directory
+    raise OSError(rf"Cannot save file into a non-existent directory: '{parent}'")
+OSError: Cannot save file into a non-existent directory: 'data\processed'
+2026-04-19 20:29:27 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:29:27 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:29:27 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:29:27 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:29:27 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:29:27 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:29:27 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:29:27 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:29:27 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:29:27 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:29:27 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:29:27 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:29:27 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:29:27 | INFO     | pipeline                  | Saved dim_customers to data/processed/dim_customers.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Saved dim_accounts to data/processed/dim_accounts.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Saved dim_cards to data/processed/dim_cards.csv
+2026-04-19 20:29:27 | INFO     | pipeline                  | Saved dim_loans to data/processed/dim_loans.csv
+2026-04-19 20:29:28 | INFO     | pipeline                  | Saved fact_transactions to data/processed/fact_transactions.csv
+2026-04-19 20:29:28 | INFO     | pipeline                  | Saved fact_support_calls to data/processed/fact_support_calls.csv
+2026-04-19 20:29:28 | INFO     | pipeline                  | Saved customer_metrics to data/processed/customer_metrics.csv
+2026-04-19 20:29:28 | INFO     | pipeline                  | Saved suspicious_accounts to data/processed/suspicious_accounts.csv
+2026-04-19 20:29:28 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:29:28 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:31:24 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:31:24 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:31:24 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:31:24 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:31:24 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:31:24 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:31:25 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:31:25 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:31:25 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:31:25 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:31:25 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:31:25 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:31:25 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:31:25 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:31:25 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:31:25 | INFO     | pipeline                  | Saved dim_customers to data/processed/dim_customers.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Saved dim_accounts to data/processed/dim_accounts.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Saved dim_cards to data/processed/dim_cards.csv
+2026-04-19 20:31:25 | INFO     | pipeline                  | Saved dim_loans to data/processed/dim_loans.csv
+2026-04-19 20:31:26 | INFO     | pipeline                  | Saved fact_transactions to data/processed/fact_transactions.csv
+2026-04-19 20:31:26 | INFO     | pipeline                  | Saved fact_support_calls to data/processed/fact_support_calls.csv
+2026-04-19 20:31:26 | INFO     | pipeline                  | Saved customer_metrics to data/processed/customer_metrics.csv
+2026-04-19 20:31:26 | INFO     | pipeline                  | Saved suspicious_accounts to data/processed/suspicious_accounts.csv
+2026-04-19 20:31:26 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:31:26 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:14 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:14 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:32:14 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:14 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:32:14 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:32:14 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:32:14 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:32:14 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:32:14 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:32:14 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:32:14 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:32:14 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:32:14 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:32:14 | INFO     | pipeline                  | Saved dim_customers to data/processed/dim_customers.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Saved dim_accounts to data/processed/dim_accounts.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Saved dim_cards to data/processed/dim_cards.csv
+2026-04-19 20:32:14 | INFO     | pipeline                  | Saved dim_loans to data/processed/dim_loans.csv
+2026-04-19 20:32:15 | INFO     | pipeline                  | Saved fact_transactions to data/processed/fact_transactions.csv
+2026-04-19 20:32:15 | INFO     | pipeline                  | Saved fact_support_calls to data/processed/fact_support_calls.csv
+2026-04-19 20:32:15 | INFO     | pipeline                  | Saved customer_metrics to data/processed/customer_metrics.csv
+2026-04-19 20:32:15 | INFO     | pipeline                  | Saved suspicious_accounts to data/processed/suspicious_accounts.csv
+2026-04-19 20:32:15 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:15 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:34 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:34 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:32:34 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:34 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:32:34 | INFO     | pipeline                  |   STAGE 1 � EXTRACT (reading files)
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  |   STAGE 2 � SCHEMA VALIDATION
+2026-04-19 20:32:34 | INFO     | pipeline                  |   STAGE 3 � CLEANING
+2026-04-19 20:32:34 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:32:34 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:32:34 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:32:34 | INFO     | pipeline                  |   STAGE 4 � TRANSFORM
+2026-04-19 20:32:34 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:32:34 | INFO     | pipeline                  |   STAGE 5 � LOAD
+2026-04-19 20:32:34 | WARNING  | pipeline                  | No connection string provided � skipping database load, saving to CSV only
+2026-04-19 20:32:34 | INFO     | pipeline                  | Saved dim_customers to data/processed/dim_customers.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Saved dim_accounts to data/processed/dim_accounts.csv
+2026-04-19 20:32:34 | INFO     | pipeline                  | Saved dim_cards to data/processed/dim_cards.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | Saved dim_loans to data/processed/dim_loans.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | Saved fact_transactions to data/processed/fact_transactions.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | Saved fact_support_calls to data/processed/fact_support_calls.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | Saved customer_metrics to data/processed/customer_metrics.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | Saved suspicious_accounts to data/processed/suspicious_accounts.csv
+2026-04-19 20:32:35 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:32:35 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:33:37 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:33:37 | INFO     | pipeline                  |   BANKING ETL PIPELINE STARTED
+2026-04-19 20:33:37 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:33:37 | INFO     | pipeline                  | Config loaded: bank_etl v1.0
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  |   STAGE 1 — EXTRACT (reading files)
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading customers from data/raw/customers.json
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 5000 rows, 7 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading accounts from data/raw/raw_accounts.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 5000 rows, 5 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading transactions from data/raw/raw_transactions.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 20000 rows, 5 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading cards from data/raw/raw_cards.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 4000 rows, 6 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading loans from data/raw/raw_loans.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 2500 rows, 7 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | Reading support_calls from data/raw/raw_support_calls.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  |   → 3000 rows, 5 columns
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  |   STAGE 2 — SCHEMA VALIDATION
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  |   STAGE 3 — CLEANING
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  | customers: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:33:37 | INFO     | pipeline                  | accounts: kept 5000 / 5000 (rejected 0)
+2026-04-19 20:33:37 | INFO     | pipeline                  | transactions: kept 20000 / 20000 (rejected 0)
+2026-04-19 20:33:37 | INFO     | pipeline                  | Rejection Rate: 0.0% → Pipeline continues
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  |   STAGE 4 — TRANSFORM
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  | Balance validation: 5000 suspicious accounts found
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] dim_customers             →   5000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] dim_accounts              →   5000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] dim_cards                 →   4000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] dim_loans                 →   2500 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] fact_transactions         →  20000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] fact_support_calls        →   3000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] customer_metrics          →   5000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | [transform] suspicious_accounts       →   5000 rows
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | INFO     | pipeline                  |   STAGE 5 — LOAD
+2026-04-19 20:33:37 | INFO     | pipeline                  | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-04-19 20:33:37 | WARNING  | pipeline                  | No connection string provided – skipping database load, saving to CSV only
+2026-04-19 20:33:37 | INFO     | pipeline                  | Saved dim_customers to data/processed/dim_customers.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  | Saved dim_accounts to data/processed/dim_accounts.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  | Saved dim_cards to data/processed/dim_cards.csv
+2026-04-19 20:33:37 | INFO     | pipeline                  | Saved dim_loans to data/processed/dim_loans.csv
+2026-04-19 20:33:38 | INFO     | pipeline                  | Saved fact_transactions to data/processed/fact_transactions.csv
+2026-04-19 20:33:38 | INFO     | pipeline                  | Saved fact_support_calls to data/processed/fact_support_calls.csv
+2026-04-19 20:33:38 | INFO     | pipeline                  | Saved customer_metrics to data/processed/customer_metrics.csv
+2026-04-19 20:33:38 | INFO     | pipeline                  | Saved suspicious_accounts to data/processed/suspicious_accounts.csv
+2026-04-19 20:33:38 | INFO     | pipeline                  | ======================================================================
+2026-04-19 20:33:38 | INFO     | pipeline                  |   PIPELINE COMPLETED SUCCESSFULLY ✓
+2026-04-19 20:33:38 | INFO     | pipeline                  | ======================================================================

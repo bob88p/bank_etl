@@ -1,0 +1,320 @@
+"""
+src/transform/etl_rules.py
+==========================
+Task 2 – Data Cleaning
+Task 3 – Data Transformation
+"""
+
+import pandas as pd
+from datetime import datetime
+from src.utils.logger import get_logger
+
+logger = get_logger("transform.etl_rules")
+
+
+# ============================================================
+# CONSTANTS
+# ============================================================
+VALID_TRANSACTION_TYPES = {"Deposit", "Withdrawal", "Transfer", "Payment"}
+VALID_ACCOUNT_TYPES     = {"Savings", "Checking", "Business"}
+VALID_CARD_TYPES        = {"Credit", "Debit", "Prepaid"}
+VALID_LOAN_TYPES        = {"Car", "Home", "Personal"}
+VALID_RESOLVED_VALUES   = {"Yes", "No"}
+
+
+# ============================================================
+# HELPER
+# ============================================================
+def _report(label: str, before: int, after: int, reason: str) -> None:
+    removed = before - after
+    if removed:
+        logger.warning(f"[{label}] Removed {removed} rows — {reason}")
+    else:
+        logger.info(f"[{label}] No issues found — {reason} ✓")
+
+
+def _to_int_series(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors="coerce")
+
+
+# ============================================================
+# CLEAN CUSTOMERS
+# ============================================================
+def clean_customers(df: pd.DataFrame):
+    rejected = []
+    original_len = len(df)
+
+    # JoinDate safe conversion
+    if pd.api.types.is_numeric_dtype(df["JoinDate"]):
+        df["JoinDate"] = pd.to_datetime(df["JoinDate"], unit="ms").dt.date
+
+    # Drop missing PK
+    missing = df[df["CustomerID"].isna()].copy()
+    if not missing.empty:
+        missing["rejection_reason"] = "Missing CustomerID"
+        rejected.append(missing)
+
+    df = df.dropna(subset=["CustomerID"])
+
+    # Deduplicate
+    before = len(df)
+    dup = df[df.duplicated("CustomerID", keep="first")].copy()
+    if not dup.empty:
+        dup["rejection_reason"] = "Duplicate CustomerID"
+        rejected.append(dup)
+
+    df = df.drop_duplicates("CustomerID", keep="first")
+    _report("customers", before, len(df), "duplicates")
+
+    # Safe string cleaning
+    for col in ["FirstName", "LastName", "Email"]:
+        df[col] = df[col].astype(str).str.strip()
+
+    df["Email"] = df["Email"].str.lower()
+    df["FirstName"] = df["FirstName"].str.title()
+    df["LastName"] = df["LastName"].str.title()
+
+    _report("customers", original_len, len(df), "final cleanup")
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# CLEAN ACCOUNTS
+# ============================================================
+def clean_accounts(df: pd.DataFrame, valid_customer_ids: set):
+
+    rejected = []
+
+    df["CustomerID"] = _to_int_series(df["CustomerID"])
+    df["AccountID"]  = _to_int_series(df["AccountID"])
+    df["Balance"]    = pd.to_numeric(df["Balance"], errors="coerce")
+
+    df = df.dropna(subset=["AccountID", "CustomerID"])
+
+    # duplicates
+    before = len(df)
+    dup = df[df.duplicated("AccountID", keep="first")].copy()
+    if not dup.empty:
+        dup["rejection_reason"] = "Duplicate AccountID"
+        rejected.append(dup)
+
+    df = df.drop_duplicates("AccountID", keep="first")
+    _report("accounts", before, len(df), "duplicates")
+
+    # orphan check
+    before = len(df)
+    df = df[df["CustomerID"].isin(valid_customer_ids)]
+    _report("accounts", before, len(df), "orphans")
+
+    # valid type
+    before = len(df)
+    df = df[df["AccountType"].isin(VALID_ACCOUNT_TYPES)]
+    _report("accounts", before, len(df), "invalid types")
+
+    # balance check
+    before = len(df)
+    bad = df[df["Balance"].isna() | (df["Balance"] <= 0)].copy()
+    if not bad.empty:
+        bad["rejection_reason"] = "Invalid balance"
+        rejected.append(bad)
+
+    df = df[df["Balance"] > 0]
+    _report("accounts", before, len(df), "invalid balance")
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# CLEAN TRANSACTIONS
+# ============================================================
+def clean_transactions(df: pd.DataFrame, valid_account_ids: set):
+
+    rejected = []
+    today = pd.Timestamp(datetime.today().date())
+
+    df["AccountID"] = _to_int_series(df["AccountID"])
+    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+    df["TransactionDate"] = pd.to_datetime(df["TransactionDate"], errors="coerce")
+
+    df = df.dropna(subset=["TransactionID", "AccountID"])
+
+    # duplicates
+    before = len(df)
+    dup = df[df.duplicated("TransactionID", keep="first")].copy()
+    if not dup.empty:
+        dup["rejection_reason"] = "Duplicate TransactionID"
+        rejected.append(dup)
+
+    df = df.drop_duplicates("TransactionID", keep="first")
+    _report("transactions", before, len(df), "duplicates")
+
+    # amount
+    before = len(df)
+    bad = df[df["Amount"].isna() | (df["Amount"] <= 0)].copy()
+    if not bad.empty:
+        bad["rejection_reason"] = "Invalid amount"
+        rejected.append(bad)
+
+    df = df[df["Amount"] > 0]
+    _report("transactions", before, len(df), "invalid amount")
+
+    # type
+    before = len(df)
+    df = df[df["TransactionType"].isin(VALID_TRANSACTION_TYPES)]
+    _report("transactions", before, len(df), "invalid type")
+
+    # orphan
+    before = len(df)
+    df = df[df["AccountID"].isin(valid_account_ids)]
+    _report("transactions", before, len(df), "orphans")
+
+    # future dates
+    before = len(df)
+    df = df[df["TransactionDate"] <= today]
+    _report("transactions", before, len(df), "future dates")
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# CLEAN CARDS
+# ============================================================
+def clean_cards(df: pd.DataFrame, valid_customer_ids: set):
+
+    rejected = []
+
+    df["CustomerID"] = _to_int_series(df["CustomerID"])
+    df["CardID"] = _to_int_series(df["CardID"])
+
+    df = df.dropna(subset=["CardID", "CustomerID"])
+
+    # duplicates
+    for col in ["CardID", "CardNumber"]:
+        before = len(df)
+        dup = df[df.duplicated(col, keep="first")].copy()
+        if not dup.empty:
+            dup["rejection_reason"] = f"Duplicate {col}"
+            rejected.append(dup)
+        df = df.drop_duplicates(col, keep="first")
+        _report("cards", before, len(df), col)
+
+    df["IssuedDate"] = pd.to_datetime(df["IssuedDate"], errors="coerce")
+    df["ExpirationDate"] = pd.to_datetime(df["ExpirationDate"], errors="coerce")
+
+    df = df[df["CardType"].isin(VALID_CARD_TYPES)]
+    df = df[df["ExpirationDate"] > df["IssuedDate"]]
+    df = df[df["CustomerID"].isin(valid_customer_ids)]
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# CLEAN LOANS
+# ============================================================
+def clean_loans(df: pd.DataFrame, valid_customer_ids: set):
+
+    rejected = []
+
+    df["CustomerID"] = _to_int_series(df["CustomerID"])
+    df["LoanAmount"] = pd.to_numeric(df["LoanAmount"], errors="coerce")
+
+    df = df.dropna(subset=["LoanID", "CustomerID"])
+
+    df = df.drop_duplicates("LoanID", keep="first")
+
+    df = df[df["LoanAmount"] > 0]
+    df = df[df["LoanType"].isin(VALID_LOAN_TYPES)]
+
+    df["LoanStartDate"] = pd.to_datetime(df["LoanStartDate"], errors="coerce")
+    df["LoanEndDate"] = pd.to_datetime(df["LoanEndDate"], errors="coerce")
+
+    df = df[df["LoanEndDate"] > df["LoanStartDate"]]
+    df = df[df["CustomerID"].isin(valid_customer_ids)]
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# CLEAN SUPPORT CALLS
+# ============================================================
+def clean_support_calls(df: pd.DataFrame, valid_customer_ids: set):
+
+    rejected = []
+
+    df["CustomerID"] = _to_int_series(df["CustomerID"])
+
+    df = df.dropna(subset=["CallID", "CustomerID"])
+    df = df.drop_duplicates("CallID", keep="first")
+
+    df["Resolved"] = df["Resolved"].astype(str).str.strip().str.title()
+    df = df[df["Resolved"].isin(VALID_RESOLVED_VALUES)]
+
+    df = df[df["CustomerID"].isin(valid_customer_ids)]
+
+    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+
+
+# ============================================================
+# TRANSFORM
+# ============================================================
+def transform_transactions(transactions: pd.DataFrame, accounts: pd.DataFrame):
+
+    df = transactions.copy()
+
+    df["AccountID"] = pd.to_numeric(df["AccountID"], errors="coerce")
+    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+
+    df = df.dropna(subset=["AccountID", "Amount"])
+
+    deposits = df[df["TransactionType"] == "Deposit"]
+    withdrawals = df[df["TransactionType"] == "Withdrawal"]
+
+    total_deposits = deposits.groupby("AccountID")["Amount"].sum()
+    total_withdrawals = withdrawals.groupby("AccountID")["Amount"].sum()
+
+    account_summary = df.groupby("AccountID").agg(
+        transaction_count=("TransactionID", "count")
+    ).join(total_deposits, how="left").join(total_withdrawals, how="left").fillna(0).reset_index()
+
+    account_summary["net_movement"] = account_summary["Amount_x"] - account_summary["Amount_y"]
+
+    acc = accounts.copy()
+    acc["AccountID"] = pd.to_numeric(acc["AccountID"], errors="coerce")
+    acc["Balance"] = pd.to_numeric(acc["Balance"], errors="coerce")
+
+    validation = acc.merge(account_summary, on="AccountID", how="left").fillna(0)
+
+    validation["recalc"] = validation["Balance"] + validation["Amount_x"] - validation["Amount_y"]
+    validation["diff"] = (validation["recalc"] - validation["Balance"]).abs()
+
+    valid_accounts = validation[validation["diff"] <= 0.01]
+    suspicious = validation[validation["diff"] > 0.01]
+
+    tx = df.merge(acc[["AccountID", "CustomerID"]], on="AccountID", how="left")
+
+    deposited = tx[tx["TransactionType"] == "Deposit"].groupby("CustomerID")["Amount"].sum()
+    withdrawn = tx[tx["TransactionType"] == "Withdrawal"].groupby("CustomerID")["Amount"].sum()
+
+    customer_metrics = pd.DataFrame({
+        "deposited": deposited,
+        "withdrawn": withdrawn
+    }).fillna(0)
+
+    df["TransactionDate"] = pd.to_datetime(df["TransactionDate"], errors="coerce")
+    df = df.dropna(subset=["TransactionDate"])
+
+    monthly = df.groupby([
+        "AccountID",
+        df["TransactionDate"].dt.to_period("M")
+    ])["Amount"].agg(["count", "sum"]).reset_index()
+
+    return {
+        "deposits": deposits,
+        "withdrawals": withdrawals,
+        "account_summary": account_summary,
+        "valid_accounts": valid_accounts,
+        "suspicious_accounts": suspicious,
+        "customer_metrics": customer_metrics,
+        "monthly_activity": monthly
+    }
