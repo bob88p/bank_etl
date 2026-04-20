@@ -180,8 +180,12 @@ bank_etl/
 ├── data/
 │   ├── raw/                     # Input files (CSV + JSON)
 │   ├── processed/               # Cleaned output files
+    |       └── pre_code.ipynb it all process and then use py files           
 │   └── rejected/                # Rejected rows with reasons
-├── logs/                        # Daily log files
+├── logs/                         # Daily log files
+├──database/
+         └──schema
+          └──bank.bak                   
 ├── src/
 │   ├── extract/
 │   │   └── reader.py            # Reads raw CSV / JSON files
@@ -200,21 +204,20 @@ bank_etl/
 
 ---
 
-## How to Run
 
-```bash
-# Install dependencies
-pip install pandas pyodbc sqlalchemy pyyaml
-
-# Run the pipeline
-python main.py
-```
 
 ---
+## 🗄️ Database Schema (Star Schema)
 
-## SQL Schema
+![Gold Layer - Final Schema](image.png)
 
-See `sql/schema.sql` for full table definitions including:
-- `dim_customers`
-- `dim_accounts`
-- `fact_transactions`
+### dim_customers
+Customer dimension table.
+
+### dim_accounts
+Account dimension table.
+
+### fact_transactions
+Transaction fact table.
+
+
