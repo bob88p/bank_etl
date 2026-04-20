@@ -383,42 +383,63 @@ def transform(cleaned: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
 # ============================================================
 # STAGE 5 – LOAD (to SQL Server)
 # ============================================================
-
+# ============================================================
+# STAGE 5 – LOAD (to SQL Server – STG Schema)
+# ============================================================
 def load(transformed: dict[str, pd.DataFrame],
          rejected: dict[str, pd.DataFrame],
          config,
          connection_string: str = None):
     logger.info("━" * 60)
-    logger.info("  STAGE 5 — LOAD")
+    logger.info("  STAGE 5 — LOAD to STAGING (Schema STG)")
     logger.info("━" * 60)
 
     if connection_string is None:
-        logger.warning("No connection string provided – skipping database load, saving to CSV only")
+        logger.warning("No connection string – saving to CSV only")
         output_path = config.output.output_path
         for name, df in transformed.items():
-            if not df.empty:
-                path = os.path.join(output_path, f"{name}.csv")
+            if not df.empty and name != "suspicious_accounts":
+                path = os.path.join(output_path, f"stg_{name}.csv")
                 df.to_csv(path, index=False)
-                logger.info(f"Saved {name} to {path}")
+                logger.info(f"Saved stg_{name} to {path}")
         save_rejected(rejected, config.rejection.rejection_path)
         return
 
-    # Load to SQL Server
     engine = create_engine(connection_string)
     with engine.connect() as conn:
-        # Create tables if not exist (you should run SQL script first)
         for table_name, df in transformed.items():
             if df.empty:
+                logger.info(f"Skipping empty table: {table_name}")
                 continue
-            # Use if_exists='replace' for simplicity, or 'append' for incremental
-            df.to_sql(table_name, con=conn, if_exists='replace', index=False, method='multi')
-            logger.info(f"Loaded {len(df)} rows into {table_name}")
+            if table_name == "suspicious_accounts":
+                logger.info(f"Skipping {table_name} (not required for staging)")
+                continue
 
-    # Save rejected separately
+            # Use the schema parameter, not a prefixed table name
+            staging_table = f"stg_{table_name}"
+            try:
+                df.to_sql(
+                    staging_table,
+                    con=conn,
+                    schema='STG',           
+                    if_exists='replace',
+                    index=False,
+                    chunksize=500
+                )
+                logger.info(f"Loaded {len(df)} rows into STG.{staging_table}")
+            except Exception as e:
+                logger.error(f"Failed to load STG.{staging_table}: {e}")
+                raise
+
     save_rejected(rejected, config.rejection.rejection_path)
     logger.info("✅ Load stage completed")
 
-
+    # ------------------------------------------------------------
+    # 3. Save rejected rows (if any)
+    # ------------------------------------------------------------
+    save_rejected(rejected, config.rejection.rejection_path)
+    logger.info("✅ Load stage completed")
+    
 # ============================================================
 # MAIN PIPELINE ENTRY POINT
 # ============================================================

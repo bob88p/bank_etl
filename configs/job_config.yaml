@@ -85,6 +85,13 @@ inputs:
       IssueType: str
       Resolved: str
 
+database:
+  server:   localhost
+  database: bank22
+  uid:      bank2
+  pwd:      "123"
+ 
+
 # ============================================================
 # REJECTION POLICY
 # ============================================================

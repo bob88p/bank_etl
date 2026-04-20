@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.env
+.venv/
+venv/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# Data (processed and rejected)
+data/processed/
+data/rejected/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database connection strings (if any)
+configs/local_config.yaml

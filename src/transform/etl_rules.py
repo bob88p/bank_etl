@@ -5,6 +5,8 @@ Task 2 – Data Cleaning
 Task 3 – Data Transformation
 """
 
+import re
+
 import pandas as pd
 from datetime import datetime
 from src.utils.logger import get_logger
@@ -36,48 +38,100 @@ def _report(label: str, before: int, after: int, reason: str) -> None:
 def _to_int_series(series: pd.Series) -> pd.Series:
     return pd.to_numeric(series, errors="coerce")
 
+# ---------------
+# Global phone standardization function (used in customers cleaning)
+
+def standardize_phone(phone: str) -> str:
+    """Clean and standardize a phone number.
+    - Keeps digits and the letter 'x' (for extension)
+    - Removes all other characters (spaces, dashes, parentheses, dots, plus)
+    - Converts multiple 'x' into a single 'x'
+    - Returns None if the result is empty.
+    """
+    if pd.isna(phone):
+        return None
+    phone_str = str(phone).lower()
+    cleaned = re.sub(r'[^0-9x]', '', phone_str)   # keep digits and x
+    cleaned = re.sub(r'x+', 'x', cleaned)         # normalize multiple x
+    return cleaned if cleaned else None
 
 # ============================================================
 # CLEAN CUSTOMERS
 # ============================================================
-def clean_customers(df: pd.DataFrame):
+# ============================================================
+# CLEAN CUSTOMERS
+# ============================================================
+def clean_customers(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if df.empty:
+        return df, pd.DataFrame()
+
     rejected = []
     original_len = len(df)
 
-    # JoinDate safe conversion
-    if pd.api.types.is_numeric_dtype(df["JoinDate"]):
-        df["JoinDate"] = pd.to_datetime(df["JoinDate"], unit="ms").dt.date
+    # 1. Convert CustomerID to int
+    df["CustomerID"] = _to_int_series(df["CustomerID"])
 
-    # Drop missing PK
-    missing = df[df["CustomerID"].isna()].copy()
-    if not missing.empty:
-        missing["rejection_reason"] = "Missing CustomerID"
-        rejected.append(missing)
+    # 2. Drop rows with null CustomerID
+    before = len(df)
+    null_id = df["CustomerID"].isna()
+    if null_id.any():
+        rejected.append(df[null_id].copy())
+        df = df[~null_id]
+        _report("customers", before, len(df), "null CustomerID")
 
-    df = df.dropna(subset=["CustomerID"])
-
-    # Deduplicate
+    # 3. Remove duplicates on CustomerID
     before = len(df)
     dup = df[df.duplicated("CustomerID", keep="first")].copy()
     if not dup.empty:
         dup["rejection_reason"] = "Duplicate CustomerID"
         rejected.append(dup)
-
     df = df.drop_duplicates("CustomerID", keep="first")
-    _report("customers", before, len(df), "duplicates")
+    _report("customers", before, len(df), "duplicate CustomerID")
 
-    # Safe string cleaning
-    for col in ["FirstName", "LastName", "Email"]:
-        df[col] = df[col].astype(str).str.strip()
+    # 4. Convert JoinDate (auto-detect seconds/milliseconds)
+    if "JoinDate" in df.columns:
+        before = len(df)
+        # First convert to numeric (handles string epochs)
+        df["JoinDate"] = pd.to_numeric(df["JoinDate"], errors="coerce")
+        # Detect unit
+        sample = df["JoinDate"].dropna().iloc[0] if not df["JoinDate"].dropna().empty else None
+        if sample is not None:
+            if sample > 1e12:
+                df["JoinDate"] = pd.to_datetime(df["JoinDate"], unit="ms", errors="coerce")
+            elif sample > 1e9:
+                df["JoinDate"] = pd.to_datetime(df["JoinDate"], unit="s", errors="coerce")
+            else:
+                df["JoinDate"] = pd.to_datetime(df["JoinDate"], errors="coerce")
+        else:
+            df["JoinDate"] = pd.NaT
 
-    df["Email"] = df["Email"].str.lower()
-    df["FirstName"] = df["FirstName"].str.title()
-    df["LastName"] = df["LastName"].str.title()
+        null_date = df["JoinDate"].isna()
+        if null_date.any():
+            invalid = df[null_date].copy()
+            invalid["rejection_reason"] = "Invalid JoinDate"
+            rejected.append(invalid)
+            df = df[~null_date]
+        _report("customers", before, len(df), "JoinDate conversion")
 
-    _report("customers", original_len, len(df), "final cleanup")
+    # 5. Clean phone numbers (using global standardize_phone)
+    if "Phone" in df.columns:
+        df["Phone"] = df["Phone"].apply(standardize_phone)
 
-    return df.reset_index(drop=True), pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+    # 6. Reject rows with missing FirstName or LastName
+    before = len(df)
+    missing_name = df["FirstName"].isna() | df["LastName"].isna()
+    if missing_name.any():
+        invalid = df[missing_name].copy()
+        invalid["rejection_reason"] = "Missing FirstName or LastName"
+        rejected.append(invalid)
+        df = df[~missing_name]
+    _report("customers", before, len(df), "missing name")
 
+    # 7. (Optional) Reject invalid email format? Not required but can be added.
+
+    rejected_df = pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
+    logger.info(f"customers: kept {len(df)} / {original_len} (rejected {len(rejected_df)})")
+    return df.reset_index(drop=True), rejected_df
 
 # ============================================================
 # CLEAN ACCOUNTS

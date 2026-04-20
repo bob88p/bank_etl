@@ -1,114 +1,64 @@
 -- ============================================================
--- sql/schema.sql
--- Banking ETL Pipeline – Data Warehouse Schema
--- SQL Server Compatible (Final Version)
+-- TASK 4: DATA MODELING
+-- Create: dim_customers, dim_accounts, fact_transactions
 -- ============================================================
 
-
 -- ============================================================
--- DIMENSIONS
+-- 1. DIM_CUSTOMERS (Dimension Table)
 -- ============================================================
 
--- Customers
 CREATE TABLE dim_customers (
-    CustomerID   INT IDENTITY(1,1) NOT NULL,
-    FirstName    NVARCHAR(100) NOT NULL,
-    LastName     NVARCHAR(100) NOT NULL,
-    Email        NVARCHAR(255) NULL,
-    Phone        NVARCHAR(50)  NULL,
-    Address      NVARCHAR(500) NULL,
-    JoinDate     DATE NULL,
-
-    CONSTRAINT PK_dim_customers PRIMARY KEY (CustomerID)
+    CustomerID INT PRIMARY KEY,
+    CustomerName VARCHAR(200) NOT NULL,
+    Phone VARCHAR(50),
+    Email VARCHAR(200),
+    Address VARCHAR(500),
+    CreatedDate DATE,
+    UpdatedDate DATE,
+    Status VARCHAR(20) DEFAULT 'Active'
 );
 
+-- ============================================================
+-- 2. DIM_ACCOUNTS (Dimension Table)
+-- ============================================================
 
--- Accounts
 CREATE TABLE dim_accounts (
-    AccountID    INT IDENTITY(1,1) NOT NULL,
-    CustomerID   INT NOT NULL,
-    AccountType  NVARCHAR(50) NOT NULL,
-    Balance      DECIMAL(18,2) NOT NULL,
-    CreatedDate  DATE NULL,
-
-    CONSTRAINT PK_dim_accounts PRIMARY KEY (AccountID),
-    CONSTRAINT FK_accounts_customers
-        FOREIGN KEY (CustomerID)
-        REFERENCES dim_customers(CustomerID)
+    AccountID INT PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    AccountNumber VARCHAR(50) UNIQUE,
+    AccountType VARCHAR(50),
+    AccountStatus VARCHAR(20),
+    OpeningBalance DECIMAL(18,2) DEFAULT 0,
+    CurrentBalance DECIMAL(18,2) DEFAULT 0,
+    Currency VARCHAR(3) DEFAULT 'EGP',
+    CreatedDate DATE,
+    UpdatedDate DATE,
+    FOREIGN KEY (CustomerID) REFERENCES dim_customers(CustomerID)
 );
-
-
--- Cards
-CREATE TABLE dim_cards (
-    CardID         INT IDENTITY(1,1) NOT NULL,
-    CustomerID     INT NOT NULL,
-    CardType       NVARCHAR(50) NOT NULL,
-    CardNumber     NVARCHAR(20) NOT NULL,
-    IssuedDate     DATE NOT NULL,
-    ExpirationDate DATE NOT NULL,
-
-    CONSTRAINT PK_dim_cards PRIMARY KEY (CardID),
-    CONSTRAINT UQ_card_number UNIQUE (CardNumber),
-    CONSTRAINT FK_cards_customers
-        FOREIGN KEY (CustomerID)
-        REFERENCES dim_customers(CustomerID)
-);
-
-
--- Loans
-CREATE TABLE dim_loans (
-    LoanID        INT IDENTITY(1,1) NOT NULL,
-    CustomerID    INT NOT NULL,
-    LoanType      NVARCHAR(50) NOT NULL,
-    LoanAmount    DECIMAL(18,2) NOT NULL,
-    InterestRate  DECIMAL(5,2) NULL,
-    LoanStartDate DATE NOT NULL,
-    LoanEndDate   DATE NOT NULL,
-
-    CONSTRAINT PK_dim_loans PRIMARY KEY (LoanID),
-    CONSTRAINT FK_loans_customers
-        FOREIGN KEY (CustomerID)
-        REFERENCES dim_customers(CustomerID)
-);
-
 
 -- ============================================================
--- FACT TABLES
+-- 3. FACT_TRANSACTIONS (Fact Table)
 -- ============================================================
 
--- Transactions
 CREATE TABLE fact_transactions (
-    TransactionID   INT IDENTITY(1,1) NOT NULL,
-    AccountID       INT NOT NULL,
-    TransactionType NVARCHAR(50) NOT NULL,
-    Amount          DECIMAL(18,2) NOT NULL,
-    TransactionDate DATETIME2 NOT NULL,
-
-    CONSTRAINT PK_fact_transactions PRIMARY KEY (TransactionID),
-    CONSTRAINT FK_transactions_accounts
-        FOREIGN KEY (AccountID)
-        REFERENCES dim_accounts(AccountID),
-
-    CONSTRAINT CHK_amount_positive CHECK (Amount > 0),
-    CONSTRAINT CHK_transaction_type CHECK (
-        TransactionType IN ('Deposit','Withdrawal','Transfer','Payment')
-    )
+    TransactionID INT PRIMARY KEY,
+    AccountID INT NOT NULL,
+    CustomerID INT NOT NULL,
+    TransactionDate DATE NOT NULL,
+    TransactionType VARCHAR(50),
+    Amount DECIMAL(18,2),
+    NetChange DECIMAL(18,2),
+    DepositAmount DECIMAL(18,2) DEFAULT 0,
+    WithdrawalAmount DECIMAL(18,2) DEFAULT 0,
+    PaymentAmount DECIMAL(18,2) DEFAULT 0,
+    TransferAmount DECIMAL(18,2) DEFAULT 0,
+    RunningBalance DECIMAL(18,2),
+    Year INT,
+    Month INT,
+    YearMonth VARCHAR(7),
+    Quarter INT,
+    DayOfWeek INT,
+    Hour INT,
+    FOREIGN KEY (AccountID) REFERENCES dim_accounts(AccountID),
+    FOREIGN KEY (CustomerID) REFERENCES dim_customers(CustomerID)
 );
-
-
--- Support Calls (Fact Table)
-CREATE TABLE fact_support_calls (
-    CallID      INT IDENTITY(1,1) NOT NULL,
-    CustomerID  INT NOT NULL,
-    CallDate    DATETIME2 NULL,
-    IssueType   NVARCHAR(100) NULL,
-    Resolved    BIT NOT NULL,   -- 1 = Yes, 0 = No
-
-    CONSTRAINT PK_fact_support_calls PRIMARY KEY (CallID),
-    CONSTRAINT FK_calls_customers
-        FOREIGN KEY (CustomerID)
-        REFERENCES dim_customers(CustomerID),
-
-    CONSTRAINT CHK_resolved CHECK (Resolved IN (0,1))
-);
-

@@ -1,16 +1,16 @@
-"""
-src/utils/config_loader.py
-Updated to support your advanced job_config.yaml
-"""
+"""utils/config_loader.py – Parses job_config.yaml into typed dataclasses."""
 
 import yaml
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
-from pathlib import Path
+from typing import Dict, List, Optional
 
+
+# ============================================================
+# Config Data Classes
+# ============================================================
 
 @dataclass
-class InputSource:
+class InputConfig:
     source_name: str
     input_type: str
     input_path: str
@@ -22,90 +22,134 @@ class InputSource:
 @dataclass
 class RejectionConfig:
     rejection_path: str
-    rejection_type: str = "csv"
-    max_rejection_rate: float = 0.20
+    rejection_type: str
+    max_rejection_rate: float
 
 
 @dataclass
 class OutputConfig:
-    output_path: str = "output"
-    output_type: str = "sql"
-    save_mode: str = "upsert"
-    target_tables: List[str] = field(default_factory=list)
+    target_table: str
+    output_type: str
+    output_path: str
+    save_mode: str
     partition_cols: List[str] = field(default_factory=list)
 
 
 @dataclass
-class JobConfig:
-    name: str
-    version: str
-    description: str = ""
-    inputs: List[InputSource] = field(default_factory=list)
-    rejection: RejectionConfig = field(default_factory=RejectionConfig)
-    output: OutputConfig = field(default_factory=OutputConfig)
+class DatabaseConfig:
+    server:   str
+    database: str
+    uid:      str
+    pwd:      str
 
+    def as_dict(self) -> dict:
+        """Return as a plain dict — passed directly to pyodbc loader."""
+        return {
+            "server":   self.server,
+            "database": self.database,
+            "uid":      self.uid,
+            "pwd":      self.pwd,
+        }
 
-def load_config(path: str = "configs/job_config.yaml") -> JobConfig:
-    """Load and parse job_config.yaml safely"""
-    config_path = Path(path)
-    if not config_path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
-
-    # Support both old and new structures
-    if "job" in raw:
-        job = raw["job"]
-    else:
-        job = raw
-
-    # Extract inputs (support both 'inputs' list and old 'input')
-    inputs_list = []
-    if "inputs" in raw and isinstance(raw["inputs"], list):
-        for item in raw["inputs"]:
-            inputs_list.append(
-                InputSource(
-                    source_name=item.get("source_name", ""),
-                    input_type=item.get("input_type", "csv"),
-                    input_path=item.get("input_path", "data/raw"),
-                    input_suffix=item.get("input_suffix", ""),
-                    has_header=item.get("has_header", True),
-                    input_schema=item.get("input_schema", {}),
-                )
-            )
-    elif "input" in raw:
-        # Fallback for old structure
-        inp = raw["input"]
-        inputs_list.append(
-            InputSource(
-                source_name=inp.get("source_name", "default"),
-                input_type=inp.get("input_type", "csv"),
-                input_path=inp.get("input_path", "data/raw"),
-                input_suffix=inp.get("input_suffix", ""),
-                has_header=inp.get("has_header", True),
-                input_schema=inp.get("input_schema", {}),
-            )
+    def connection_string(self) -> str:
+        """Return a pyodbc connection string."""
+        return (
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={self.server};"
+            f"DATABASE={self.database};"
+            f"UID={self.uid};"
+            f"PWD={self.pwd};"
         )
 
-    rejection = raw.get("rejection", {})
-    output = raw.get("output", {})
 
+@dataclass
+class ETLConfig:
+    rules: List[dict] = field(default_factory=list)
+
+
+@dataclass
+class QualityConfig:
+    checks: List[str] = field(default_factory=list)
+
+
+@dataclass
+class JobConfig:
+    name:        str
+    version:     str
+    description: str
+    input:       InputConfig
+    rejection:   RejectionConfig
+    output:      OutputConfig
+    database:    DatabaseConfig        # ← new
+    etl:         ETLConfig
+    quality:     QualityConfig
+
+
+# ============================================================
+# Loader
+# ============================================================
+
+def load_config(path: str) -> JobConfig:
+    with open(path, "r") as f:
+        raw = yaml.safe_load(f)
+
+    job          = raw["job"]
+    input_cfg    = raw["input"]
+    rejection_cfg= raw["rejection"]
+    output_cfg   = raw["output"]
+    db_cfg       = raw["database"]          # ← new
+    etl_cfg      = raw["etl"]
+    quality_cfg  = raw["quality"]
+
+    # ── Validation ────────────────────────────────────────────
+    rate = rejection_cfg["max_rejection_rate"]
+    if not (0 <= rate <= 1):
+        raise ValueError("max_rejection_rate must be between 0 and 1")
+
+    if not all(k in db_cfg for k in ("server", "database", "uid", "pwd")):
+        raise ValueError("database config must include: server, database, uid, pwd")
+
+    # ── Build and return ──────────────────────────────────────
     return JobConfig(
-        name=job.get("name", "Banking ETL"),
-        version=job.get("version", "1.0"),
-        description=job.get("description", ""),
-        inputs=inputs_list,
-        rejection=RejectionConfig(
-            rejection_path=rejection.get("rejection_path", "output/rejected"),
-            rejection_type=rejection.get("rejection_type", "csv"),
-            max_rejection_rate=rejection.get("max_rejection_rate", 0.20),
+        name=job["name"],
+        version=job["version"],
+        description=job["description"],
+
+        input=InputConfig(
+            source_name=input_cfg["source_name"],
+            input_type=input_cfg["input_type"],
+            input_path=input_cfg["input_path"],
+            input_suffix=input_cfg["input_suffix"],
+            has_header=input_cfg["has_header"],
+            input_schema=input_cfg.get("input_schema", {}),
         ),
+
+        rejection=RejectionConfig(
+            rejection_path=rejection_cfg["rejection_path"],
+            rejection_type=rejection_cfg["rejection_type"],
+            max_rejection_rate=rate,
+        ),
+
         output=OutputConfig(
-            output_path=output.get("output_path", "output"),
-            output_type=output.get("output_type", "sql"),
-            save_mode=output.get("save_mode", "upsert"),
-            target_tables=output.get("target_tables", []),
-            partition_cols=output.get("partition_cols", []),
+            target_table=output_cfg["target_table"],
+            output_type=output_cfg["output_type"],
+            output_path=output_cfg["output_path"],
+            save_mode=output_cfg["save_mode"],
+            partition_cols=output_cfg.get("partition_cols", []),
+        ),
+
+        database=DatabaseConfig(           # ← new
+            server=str(db_cfg["server"]),
+            database=str(db_cfg["database"]),
+            uid=str(db_cfg["uid"]),
+            pwd=str(db_cfg["pwd"]),
+        ),
+
+        etl=ETLConfig(
+            rules=etl_cfg.get("rules", [])
+        ),
+
+        quality=QualityConfig(
+            checks=quality_cfg.get("checks", [])
         ),
     )

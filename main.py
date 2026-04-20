@@ -9,7 +9,7 @@ Usage
   python main.py --db "<conn_string>"     # Load into SQL Server
 
 SQL Server connection string example:
-  mssql+pyodbc://bank:password@server/Banking?driver=ODBC+Driver+17+for+SQL+Server
+  mssql+pyodbc://banks:123@localhost/Banking?driver=ODBC+Driver+17+for+SQL+Server
 """
 
 import argparse
